@@ -24,19 +24,9 @@ function getQueryString (url, name) {
 page.onResourceRequested = function(request, networkRequest) {
     // If the requested url if the one of the webpage, do nothing
     // to allow other ressource requests
-    console.log('request: ' + request.url);
     var baseUrl = request.url.split('?')[0];
     var temp = baseUrl.split('/');
     var fileName = temp[temp.length-1];
-    if (0 == m3u8Flag && 'm3u8' == fileName)
-    {
-         m3u8Flag = 1;
-         console.log('page open ' + request.url);
-         page.open(request.url);
-         console.log('request abort!');
-         request.abort();
-         return;
-    }
     if ('m3u8' == fileName)
     {
         console.log('request: ' + request.url);
@@ -65,17 +55,19 @@ page.onResourceReceived = function(response) {
     var baseUrl = response.url.split('?')[0];
     var temp = baseUrl.split('/');
     var fileName = temp[temp.length-1];
+
     if ('m3u8' == fileName)
     {
         console.log('received: ' + fileName
             + ' bodySize: '+ response.bodySize
             + ' stage: ' + response.stage);
         readM3u8(response.body);
-        if (0 == ts_urls.length) return;
-        ts_i += 1;
-        page.open(ts_urls[ts_i - 1]);
+        var dir = '/root/video/';
+        fs.makeDirectory(dir);
+        var path = dir + fileName;
+        fs.write(path, response.body, 'b');
     }
-    if (response.url != ts_urls[ts_i - 1]) return;
+
     var paras = response.url.split('?')[1].split('&');
     var ts_start = getQueryString(response.url, 'ts_start');
     var ts_end = getQueryString(response.url, 'ts_end');
@@ -88,9 +80,6 @@ page.onResourceReceived = function(response) {
     fs.makeDirectory(dir);
     var path = dir + fileName + '_._' + ts_start + '_._' + ts_end;
     fs.write(path, response.body, 'b');
-    console.log('write: ' + res);
-    ts_i += 1;
-    page.open(ts_urls[ts_i - 1]);
 }
 
 // When all requests are made, output the array to the console
@@ -111,6 +100,8 @@ page.onError = function(){
 page.captureContent = [ /.*/ ]
 page.settings.userAgent = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36';
 var url = 'http://v.youku.com/v_show/id_XMzUzNDE3NDc5Ng==.html?spm=a2hww.20027244.search.5&from=y1.8-4.999'
+//var url = 'http://www.baidu.com/index.html'
 // Open the web page
 //page.open(system.args[1]);
+page.viewportSize = { width: 1980, height: 1024};
 page.open(url);
