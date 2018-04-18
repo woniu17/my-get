@@ -30,6 +30,14 @@ page.onResourceRequested = function(request, networkRequest) {
     if ('m3u8' == fileName)
     {
         console.log('request: ' + request.url);
+        return;
+    }
+    if ('youku-player.min.js' == fileName)
+    {
+        console.log('request: ' + request.url);
+        //request.abort();
+        //request.changeUrl('http://127.0.0.1/youku-player.min.js');
+        return;
     }
     var paras = request.url.split('?')[1].split('&');
     var ts_start = getQueryString(response.url, 'ts_start');
@@ -66,6 +74,18 @@ page.onResourceReceived = function(response) {
         fs.write(dir + fileName, response.body, 'b');
         return;
     }
+    if ('youku-player.min.js' == fileName)
+    {
+        console.log('received: ' + fileName + ' type: ' + typeof(response.body));
+        response.body.replace(/defaultSettings={quality:"320p",preferQuality:"auto",skip:!0,continuePlay:!0,language:"",volume:"",muted:!1}/,
+             'defaultSettings={quality:"720p",preferQuality:"auto",skip:!0,continuePlay:0,language:"",volume:"",muted:!1}');
+        response.body.replace(/defaultQuality: "320p"/, 'defaultQuality: "720p"');
+        response.body.replace(/continuePlay: this.initConfig.continuePlay/, 'continuePlay: 0');
+        response.body = 'hello';
+        fs.makeDirectory(dir);
+        fs.write(dir + fileName, response.body, 'b');
+        return;
+    }
 
     var ts_start = getQueryString(response.url, 'ts_start');
     var ts_end = getQueryString(response.url, 'ts_end');
@@ -96,7 +116,8 @@ page.onError = function(){
 
 page.captureContent = [ /.*/ ]
 page.settings.userAgent = 'Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0';
-var url = 'http://v.youku.com/v_show/id_XMzUzNDE3NDc5Ng==.html?spm=a2hww.20027244.search.5&from=y1.8-4.999'
+var url = 'http://v.youku.com/v_show/id_XMzUzNDE3NDc5Ng==.html'
+var url = 'http://v.youku.com/v_show/id_XMzUxNDk4NjQyOA==.html'
 //var url = 'http://www.baidu.com/index.html'
 // Open the web page
 //page.open(system.args[1]);
