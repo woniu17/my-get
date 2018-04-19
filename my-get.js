@@ -46,56 +46,38 @@ page.onResourceRequested = function(request, networkRequest) {
     console.log('request: ' + baseUrl + ' ts_start: ' + ts_start + 'ts_end: ' + ts_end);
 };
 
-function readM3u8(m3u8)
-{
-    var lines = m3u8.split('\n');
-    for (var i = 0; i < lines.length; i++)
-    {
-        var url = lines[i];
-        if ('' == url) continue;
-        if ('#' == url[0]) continue;
-        ts_urls[ts_urls.length] = url;
-    }
-}
-
 page.onResourceReceived = function(response) {
     if ('end' != response.stage) {return;}
-    var baseUrl = response.url.split('?')[0];
+    var url = response.url
+    var baseUrl = url.split('?')[0];
     var temp = baseUrl.split('/');
     var fileName = temp[temp.length-1];
     var dir = '/root/video/';
 
     if ('m3u8' == fileName)
     {
-        console.log('received: ' + fileName
-            + ' bodySize: '+ response.bodySize
-            + ' stage: ' + response.stage);
+        console.log('received: ' + fileName);
+        var vid = getQueryString(url, 'vid');
+        var type = getQueryString(url, 'type');
         fs.makeDirectory(dir);
-        fs.write(dir + fileName, response.body, 'b');
+        fs.write(dir + fileName + '#' + vid + '#' + type, response.body, 'b');
         return;
     }
     if ('youku-player.min.js' == fileName)
     {
-        console.log('received: ' + fileName + ' type: ' + typeof(response.body));
-        response.body.replace(/defaultSettings={quality:"320p",preferQuality:"auto",skip:!0,continuePlay:!0,language:"",volume:"",muted:!1}/,
-             'defaultSettings={quality:"720p",preferQuality:"auto",skip:!0,continuePlay:0,language:"",volume:"",muted:!1}');
-        response.body.replace(/defaultQuality: "320p"/, 'defaultQuality: "720p"');
-        response.body.replace(/continuePlay: this.initConfig.continuePlay/, 'continuePlay: 0');
-        response.body = 'hello';
+        console.log('received: ' + fileName);
         fs.makeDirectory(dir);
         fs.write(dir + fileName, response.body, 'b');
         return;
     }
 
-    var ts_start = getQueryString(response.url, 'ts_start');
-    var ts_end = getQueryString(response.url, 'ts_end');
+    var ts_start = getQueryString(url, 'ts_start');
+    var ts_end = getQueryString(url, 'ts_end');
     if (0 == ts_start && 0 == ts_end) {return;}
 
-    console.log('received: ' + fileName + ' ts_start: ' + ts_start
-        + ' ts_end: ' + ts_end + ' bodySize: '+ response.bodySize
-        + ' stage: ' + response.stage);
+    console.log('received: ' + fileName + ' ts_start: ' + ts_start + ' ts_end: ' + ts_end);
     fs.makeDirectory(dir);
-    var path = dir + fileName + '_._' + ts_start + '_._' + ts_end;
+    var path = dir + fileName + '##' + ts_start + '##' + ts_end;
     fs.write(path, response.body, 'b');
 }
 
@@ -121,5 +103,6 @@ var url = 'http://v.youku.com/v_show/id_XMzUxNDk4NjQyOA==.html'
 //var url = 'http://www.baidu.com/index.html'
 // Open the web page
 //page.open(system.args[1]);
-page.viewportSize = { width: 1980, height: 1024};
+//page.viewportSize = { width: 1980, height: 1024};
+page.viewportSize = { width: 1000, height: 624};
 page.open(url);
